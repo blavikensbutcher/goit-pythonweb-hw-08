@@ -1,0 +1,14 @@
+[project]
+name = "goit-pythonweb-hw-08"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "asyncpg>=0.31.0",
+    "black>=26.3.1",
+    "fastapi[standard]>=0.136.1",
+    "greenlet>=3.4.0",
+    "sqlalchemy>=2.0.49",
+    "uvloop>=0.22.1",
+]
