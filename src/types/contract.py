@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import date
 from typing import Optional
 from pydantic import BaseModel, ConfigDict, Field
 from uuid import UUID
@@ -20,8 +20,8 @@ class ContactDto(BaseModel):
         default=None,
         json_schema_extra={"example": "+380501112233"}
     )
-    birthday: datetime = Field(
-        json_schema_extra={"example": "1990-07-13T00:00:00"}
+    birthday: date = Field(
+        json_schema_extra={"example": "1990-07-13"}
     )
     
     
@@ -45,8 +45,8 @@ class ContactDtoResponse(BaseModel):
         default=None,
         json_schema_extra={"example": "+380501112233"}
     )
-    birthday: datetime = Field(
-        json_schema_extra={"example": "1990-07-13T00:00:00"}
+    birthday: date = Field(
+        json_schema_extra={"example": "1990-07-13"}
     )
     
 class UpdateContactDto(BaseModel):
@@ -64,7 +64,7 @@ class UpdateContactDto(BaseModel):
 
                 "phone": "+380671234567",
 
-                "birthday": "1990-07-13T00:00:00"
+                "birthday": "1990-07-13"
 
             }
 
@@ -75,4 +75,4 @@ class UpdateContactDto(BaseModel):
     last_name: Optional[str] = None
     email: Optional[str] = None
     phone: Optional[str] = None
-    birthday: Optional[datetime] = None
+    birthday: Optional[date] = None

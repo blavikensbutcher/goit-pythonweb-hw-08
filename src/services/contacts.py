@@ -1,20 +1,21 @@
 from datetime import date, timedelta
 
+from fastapi import HTTPException
 from sqlalchemy import func, or_, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.models.contacts import ContactModel
-from src.types.contract import ContactDto
+from src.types.contract import ContactDto, UpdateContactDto
 
 
 class ContactsService:
     @staticmethod
-    async def get_contacts(db: AsyncSession, name: str | None = None, surname: str | None = None, email: str | None = None):
+    async def get_contacts(db: AsyncSession, name: str | None = None, lastname: str | None = None, email: str | None = None):
         query = select(ContactModel)
         if name:
-            query = query.where(ContactModel.name == name)
-        if surname:
-            query = query.where(ContactModel.surname == surname)
+            query = query.where(ContactModel.first_name == name)
+        if lastname:
+            query = query.where(ContactModel.last_name == lastname)
         if email:
             query = query.where(ContactModel.email == email)
         result = await db.execute(query)
@@ -47,6 +48,12 @@ class ContactsService:
         
     @staticmethod
     async def create_contact(db: AsyncSession, contact_data: ContactDto):
+        existsing_contact = await db.execute(
+            select(ContactModel).where(ContactModel.email == contact_data.email)
+        )
+        if existsing_contact.scalar_one_or_none():
+            raise HTTPException(status_code=409, detail="Contact with this email already exists")
+        
         new_contact = ContactModel(**contact_data.model_dump(exclude_none=True))
         db.add(new_contact)
         await db.commit()
@@ -57,12 +64,19 @@ class ContactsService:
     async def get_contact_by_id(db: AsyncSession, contact_id: str):
         result = await db.execute(select(ContactModel).where(ContactModel.id == contact_id))
         contact = result.scalar_one_or_none()
+        if not contact:
+            raise HTTPException(status_code=404, detail="Contact not found")
+        
         return contact
     
     @staticmethod
     async def remove_contact_by_id( db: AsyncSession, contact_id: str):
         result = await db.execute(select(ContactModel).where(ContactModel.id == contact_id))
         contact = result.scalar_one_or_none()
+        
+        if not contact:
+            raise HTTPException(status_code=404, detail="Contact not found")
+        
         if contact:
             await db.delete(contact)
             await db.commit()
@@ -70,11 +84,11 @@ class ContactsService:
         return False
     
     @staticmethod
-    async def update_contact(db: AsyncSession, contact_id: str, contact_data: ContactDto):
+    async def update_contact(db: AsyncSession, contact_id: str, contact_data: UpdateContactDto):
         result = await db.execute(select(ContactModel).where(ContactModel.id == contact_id))
         contact = result.scalar_one_or_none()
         if not contact:
-            return None
+            raise HTTPException(status_code=404, detail="Contact not found")
         
         for key, value in contact_data.model_dump(exclude_none=True).items():
             setattr(contact, key, value)

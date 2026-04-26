@@ -18,16 +18,20 @@ contactsService = get_contacts_service()
 @router.get("", response_model=List[ContactDtoResponse])
 async def get_contacts(
     name: Optional[str] = Query(default=None, description="Filter by first name"),
-    surname: Optional[str] = Query(default=None, description="Filter by surname"),
+    lastname: Optional[str] = Query(default=None, description="Filter by lastname"),
     email: Optional[str] = Query(default=None, description="Filter by email"),
     db: AsyncSession = Depends(get_db),
 ):
-    return await contactsService.get_contacts(
+    contacts = await contactsService.get_contacts(
         db=db,
         name=name,
-        surname=surname,
+        lastname=lastname,
         email=email,
     )
+    if not contacts:
+        raise HTTPException(status_code=404, detail="No contacts found")
+    else:
+        return contacts
     
 
 @router.get("/birthdays/upcoming", response_model=List[ContactDtoResponse])
@@ -61,15 +65,5 @@ async def update_contact(
     db: AsyncSession = Depends(get_db),
 
 ):
-    existing_contact = await contactsService.get_contact_by_id(db, contact_id)
-    if not existing_contact:
-        raise HTTPException(status_code=404, detail="Contact not found")
-
-    for key, value in contact_data.model_dump(exclude_none=True).items():
-        setattr(existing_contact, key, value)
-
-    await db.commit()
-
-    await db.refresh(existing_contact)
-
-    return existing_contact
+    updated_contact = await contactsService.update_contact(db, contact_id, contact_data)
+    return updated_contact
