@@ -1,4 +1,6 @@
-from sqlalchemy import select
+from datetime import date, timedelta
+
+from sqlalchemy import func, or_, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.models.contacts import ContactModel
@@ -7,11 +9,42 @@ from src.types.contract import ContactDto
 
 class ContactsService:
     @staticmethod
-    async def get_contacts(db: AsyncSession):
-        result = await db.execute(select(ContactModel))
+    async def get_contacts(db: AsyncSession, name: str | None = None, surname: str | None = None, email: str | None = None):
+        query = select(ContactModel)
+        if name:
+            query = query.where(ContactModel.name == name)
+        if surname:
+            query = query.where(ContactModel.surname == surname)
+        if email:
+            query = query.where(ContactModel.email == email)
+        result = await db.execute(query)
         contacts = result.scalars().all()
         return contacts
     
+    @staticmethod
+    async def find_contacts_birthday_in_week(db: AsyncSession):
+            today = date.today()
+            next_week = today + timedelta(days=7)
+
+            today_md = today.strftime("%m-%d")
+            next_week_md = next_week.strftime("%m-%d")
+            birthday_month_day = func.to_char(ContactModel.birthday, "MM-DD")
+
+            if today_md <= next_week_md:
+                query = select(ContactModel).where(
+                    birthday_month_day.between(today_md, next_week_md)
+                )
+            else:
+                query = select(ContactModel).where(
+                    or_(
+                        birthday_month_day >= today_md,
+                        birthday_month_day <= next_week_md,
+                    )
+                )
+
+            result = await db.execute(query)
+            return result.scalars().all()
+        
     @staticmethod
     async def create_contact(db: AsyncSession, contact_data: ContactDto):
         new_contact = ContactModel(**contact_data.model_dump(exclude_none=True))

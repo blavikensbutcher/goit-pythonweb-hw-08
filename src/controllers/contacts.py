@@ -1,8 +1,6 @@
+from typing import List, Optional
 
-
-from typing import List
-
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 
 from src.database import get_db
 from src.services.contacts import get_contacts_service
@@ -17,10 +15,25 @@ router = APIRouter(prefix="/contacts", tags=["Contacts"])
 contactsService = get_contacts_service()
 
 
+@router.get("", response_model=List[ContactDtoResponse])
+async def get_contacts(
+    name: Optional[str] = Query(default=None, description="Filter by first name"),
+    surname: Optional[str] = Query(default=None, description="Filter by surname"),
+    email: Optional[str] = Query(default=None, description="Filter by email"),
+    db: AsyncSession = Depends(get_db),
+):
+    return await contactsService.get_contacts(
+        db=db,
+        name=name,
+        surname=surname,
+        email=email,
+    )
+    
 
-@router.get("",  response_model=List[ContactDtoResponse])
-async def get_contacts(db: AsyncSession = Depends(get_db),) :
-    return await contactsService.get_contacts(db)
+@router.get("/birthdays/upcoming", response_model=List[ContactDtoResponse])
+async def get_upcoming_birthdays(db: AsyncSession = Depends(get_db)):
+    return await contactsService.find_contacts_birthday_in_week(db)
+
     
 @router.post("", response_model=ContactDtoResponse)
 async def create_contact(contact_data: ContactDto, db: AsyncSession = Depends(get_db)):
