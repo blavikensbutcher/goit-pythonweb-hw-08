@@ -23,6 +23,10 @@ class ContactDto(BaseModel):
     birthday: date = Field(
         json_schema_extra={"example": "1990-07-13"}
     )
+    description: Optional[str] = Field(
+        default=None,
+        json_schema_extra={"example": "Friend from school"}
+    )
     
     
 class ContactDtoResponse(BaseModel):
@@ -48,7 +52,12 @@ class ContactDtoResponse(BaseModel):
     birthday: date = Field(
         json_schema_extra={"example": "1990-07-13"}
     )
-    
+    description: Optional[str] = Field(
+        default=None,
+        json_schema_extra={"example": "Friend from school"}
+    )
+
+
 class UpdateContactDto(BaseModel):
     model_config = ConfigDict(
         from_attributes=True,
@@ -64,8 +73,9 @@ class UpdateContactDto(BaseModel):
 
                 "phone": "+380671234567",
 
-                "birthday": "1990-07-13"
-
+                "birthday": "1990-07-13",
+                
+                "description": "Best friend from school"
             }
 
         }
@@ -76,3 +86,4 @@ class UpdateContactDto(BaseModel):
     email: Optional[str] = None
     phone: Optional[str] = None
     birthday: Optional[date] = None
+    description: Optional[str] = None

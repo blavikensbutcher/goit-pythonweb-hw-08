@@ -19,3 +19,4 @@ class ContactModel(Base):
     email: Mapped[str] = mapped_column(String(255), nullable=False, unique=True)
     phone: Mapped[str] = mapped_column(String(20), nullable=True)
     birthday: Mapped[date] = mapped_column(Date())
+    description: Mapped[str] = mapped_column(String(255), nullable=True)
